@@ -3,6 +3,8 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 
 	"github.com/invad0r/building-microservices-with-go/handlers/data"
 )
@@ -19,8 +21,45 @@ func NewProducts(l *log.Logger) *Products {
 
 func (p *Products) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		p.GetProducts(rw, r)
+		p.getProducts(rw, r)
 		return
+	}
+
+	if r.Method == http.MethodPost {
+		p.addProduct(rw, r)
+		return
+	}
+
+	if r.Method == http.MethodPut {
+		p.l.Printf("path: %v", r.URL.Path)
+
+		re := regexp.MustCompile(`/([0-9]+)`)
+		g := re.FindAllStringSubmatch(r.URL.Path, -1)
+
+		if len(g) != 1 {
+			p.l.Println("invalid uri more than one id")
+			http.Error(rw, "Invalid URI", http.StatusBadRequest)
+			return
+		}
+
+		if len(g[0]) != 2 {
+			p.l.Println("invalid uri more than one capture group")
+			http.Error(rw, "Invalid URI", http.StatusBadRequest)
+			return
+		}
+
+		idString := g[0][1]
+		id, err := strconv.Atoi(idString)
+		if err != nil {
+			p.l.Println("invalid uri unable to convert number")
+			http.Error(rw, "Invalid URI", http.StatusBadRequest)
+			return
+		}
+
+		p.l.Println("go id", id)
+
+		p.updateProduct(id, rw, r)
+
 	}
 
 	//catch all
@@ -28,7 +67,7 @@ func (p *Products) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 // GetProducts ..
-func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
+func (p *Products) getProducts(rw http.ResponseWriter, r *http.Request) {
 	lp := data.GetProducts()
 	err := lp.ToJSON(rw)
 	//d, err := json.Marshal(lp)
@@ -36,4 +75,40 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "unable to marshal json", http.StatusInternalServerError)
 	}
 	//rw.Write(d)
+}
+
+// AddProduct ..
+func (p *Products) addProduct(rw http.ResponseWriter, r *http.Request) {
+	p.l.Println("handle Post Product.")
+
+	prod := &data.Product{}
+
+	err := prod.FromJSON(r.Body)
+	if err != nil {
+		http.Error(rw, "unable to unmarshal json", http.StatusBadGateway)
+	}
+
+	data.AddProduct(prod)
+}
+
+func (p *Products) updateProduct(id int, rw http.ResponseWriter, r *http.Request) {
+	p.l.Println("handle PUT Product.")
+
+	prod := &data.Product{}
+
+	err := prod.FromJSON(r.Body)
+	if err != nil {
+		http.Error(rw, "unable to unmarshal json", http.StatusBadGateway)
+	}
+
+	err = data.UpdateProduct(id, prod)
+	if err == data.ErrProductNotFound {
+		http.Error(rw, "Product not found.", http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(rw, "Product not found.", http.StatusInternalServerError)
+		return
+	}
 }
