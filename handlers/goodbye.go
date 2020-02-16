@@ -5,10 +5,12 @@ import (
 	"net/http"
 )
 
+// Goodbye ..
 type Goodbye struct {
 	l *log.Logger
 }
 
+// NewGoodbye ..
 func NewGoodbye(l *log.Logger) *Goodbye {
 	return &Goodbye{l}
 }

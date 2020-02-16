@@ -7,10 +7,12 @@ import (
 	"net/http"
 )
 
+// Hello ..
 type Hello struct {
 	l *log.Logger
 }
 
+// NewHello ..
 func NewHello(l *log.Logger) *Hello {
 	return &Hello{l}
 }
