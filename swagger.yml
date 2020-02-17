@@ -1,0 +1,73 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Product:
+    description: Product defines the structure for the API request
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        description: the id for this user
+        format: int64
+        minimum: 1
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      price:
+        format: float
+        type: number
+        x-go-name: Price
+      sku:
+        type: string
+        x-go-name: SKU
+    required:
+    - id
+    type: object
+    x-go-package: github.com/invad0r/building-microservices-with-go/handlers/data
+info:
+  description: Documentation for Product API
+  title: Product API
+  version: 1.0.0
+paths:
+  /products:
+    get:
+      description: Returns a list of products
+      operationId: listProducts
+      responses:
+        "200":
+          $ref: '#/responses/productsResponse'
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      description: Returns a list of products
+      operationId: deleteProduct
+      parameters:
+      - description: The id of the product to delete fromt he database
+        format: int64
+        in: path
+        name: ID
+        required: true
+        type: integer
+      responses:
+        "201":
+          $ref: '#/responses/noContent'
+      tags:
+      - products
+produces:
+- application/json
+responses:
+  noContent: {}
+  productsResponse:
+    description: A list of products return in the response
+    schema:
+      items:
+        $ref: '#/definitions/Product'
+      type: array
+schemes:
+- http
+swagger: "2.0"

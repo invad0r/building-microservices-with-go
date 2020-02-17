@@ -1,3 +1,18 @@
+// Package classification Product API
+//
+// Documentation for Product API
+//
+// Schemes: http
+// BasePath: /
+// Version: 1.0.0
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+//
+// swagger:meta
 package handlers
 
 import (
@@ -5,11 +20,29 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/invad0r/building-microservices-with-go/handlers/data"
 )
+
+// A list of products return in the response
+// swagger:response productsResponse
+type productsResponseWrapper struct {
+	// All products in the system
+	// in: body
+	Body []data.Product
+}
+
+// swagger:response noContent
+type productsNoContent struct {
+}
+
+// swagger:parameters deleteProduct
+type productIDParameterWrapper struct {
+	// The id of the product to delete fromt he database
+	// in: path
+	// required: true
+	ID int `json: id`
+}
 
 // Products exported
 type Products struct {
@@ -19,48 +52,6 @@ type Products struct {
 // NewProducts exported
 func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
-}
-
-// GetProducts ..
-func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("handle GET Product.")
-	lp := data.GetProducts()
-	err := lp.ToJSON(rw)
-	//d, err := json.Marshal(lp)
-	if err != nil {
-		http.Error(rw, "unable to marshal json", http.StatusInternalServerError)
-	}
-	//rw.Write(d)
-}
-
-// AddProduct ..
-func (p Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("handle Post Product.")
-	prod := r.Context().Value(KeyProduct{}).(data.Product)
-	data.AddProduct(&prod)
-}
-
-// UpdateProduct ..
-func (p Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(rw, "Unable to convert id", http.StatusBadRequest)
-	}
-
-	p.l.Println("handle PUT Product.", id)
-	prod := r.Context().Value(KeyProduct{}).(data.Product)
-
-	err = data.UpdateProduct(id, &prod)
-	if err == data.ErrProductNotFound {
-		http.Error(rw, "Product not found.", http.StatusNotFound)
-		return
-	}
-
-	if err != nil {
-		http.Error(rw, "Product not found.", http.StatusInternalServerError)
-		return
-	}
 }
 
 // KeyProduct ..
